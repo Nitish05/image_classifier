@@ -75,15 +75,26 @@ def main():
 
     # Walk through all images
     exts = (".jpg",".jpeg",".png")
-    for root, _, files in os.walk(args.src_dir):
+    src_root = os.path.abspath(args.src_dir)
+    dst_meme = os.path.abspath(args.dst_meme)
+    dst_nonmeme = os.path.abspath(args.dst_nonmeme)
+
+    def is_within(path, directory):
+        """Return True if *path* is inside *directory* (handles cross-drive paths)."""
+        try:
+            return os.path.commonpath([path, directory]) == directory
+        except ValueError:
+            return False
+
+    for root, _, files in os.walk(src_root):
         for fn in files:
             if not fn.lower().endswith(exts):
                 continue
 
             src_path = os.path.join(root, fn)
+            src_path_abs = os.path.abspath(src_path)
             # Skip if already in one of the destination folders
-            if os.path.commonpath([src_path, args.dst_meme])    == args.dst_meme \
-            or os.path.commonpath([src_path, args.dst_nonmeme]) == args.dst_nonmeme:
+            if is_within(src_path_abs, dst_meme) or is_within(src_path_abs, dst_nonmeme):
                 continue
 
             cls = classify_image(src_path, model, device, transform)
